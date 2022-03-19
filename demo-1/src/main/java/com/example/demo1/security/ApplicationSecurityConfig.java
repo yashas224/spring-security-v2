@@ -1,16 +1,17 @@
 package com.example.demo1.security;
 
+import com.example.demo1.auth.ApplicationUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import java.util.concurrent.TimeUnit;
 
@@ -22,36 +23,59 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
+    private ApplicationUserService applicationUserService;
+
+    @Autowired
     public ApplicationSecurityConfig(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
     }
 
+//    @Override
+//    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+//
+//        UserDetails annaSmith = User.builder()
+//                .username("annasmith")
+//                .password(passwordEncoder.encode("samaga"))
+//                .authorities(ApplicationUserRole.STUDENT.getGrantedAuthority()).build();
+////                .roles(ApplicationUserRole.STUDENT.name())
+//
+//        UserDetails linda = User.builder()
+//                .username("linda")
+//                .password(passwordEncoder.encode("adminpassword"))
+//                .authorities(ApplicationUserRole.ADMIN.getGrantedAuthority())
+////                .roles(ApplicationUserRole.ADMIN.name())
+//                .build();
+//        UserDetails tom = User.builder()
+//                .username("tom")
+//                .password(passwordEncoder.encode("password123"))
+//                .authorities(ApplicationUserRole.ADMINTRAINEE.getGrantedAuthority())
+//                .build();
+////                .roles(ApplicationUserRole.ADMINTRAINEE.name());
+//
+//        auth.inMemoryAuthentication()
+//                .withUser(annaSmith)
+//                .withUser(linda)
+//                .withUser(tom);
+//    }
+
+
+    @Override
+    protected UserDetailsService userDetailsService() {
+        return applicationUserService;
+    }
+
+
+    @Bean
+    public DaoAuthenticationProvider getDAOAuthenticationProvider() {
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+        authenticationProvider.setUserDetailsService(applicationUserService);
+        authenticationProvider.setPasswordEncoder(passwordEncoder);
+        return authenticationProvider;
+    }
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-
-        UserDetails annaSmith = User.builder()
-                .username("annasmith")
-                .password(passwordEncoder.encode("samaga"))
-                .authorities(ApplicationUserRole.STUDENT.getGrantedAuthority()).build();
-//                .roles(ApplicationUserRole.STUDENT.name())
-
-        UserDetails linda = User.builder()
-                .username("linda")
-                .password(passwordEncoder.encode("adminpassword"))
-                .authorities(ApplicationUserRole.ADMIN.getGrantedAuthority())
-//                .roles(ApplicationUserRole.ADMIN.name())
-                .build();
-        UserDetails tom = User.builder()
-                .username("tom")
-                .password(passwordEncoder.encode("password123"))
-                .authorities(ApplicationUserRole.ADMINTRAINEE.getGrantedAuthority())
-                .build();
-//                .roles(ApplicationUserRole.ADMINTRAINEE.name());
-
-        auth.inMemoryAuthentication()
-                .withUser(annaSmith)
-                .withUser(linda)
-                .withUser(tom);
+        auth.authenticationProvider(getDAOAuthenticationProvider());
     }
 
     @Override
@@ -84,7 +108,7 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .logoutUrl("/logout")
                 .clearAuthentication(true)
                 .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID","remember-user-credentials")
+                .deleteCookies("JSESSIONID", "remember-user-credentials")
                 .logoutSuccessUrl("/login");
 
     }
