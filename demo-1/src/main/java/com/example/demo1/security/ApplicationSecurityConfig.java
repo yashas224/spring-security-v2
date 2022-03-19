@@ -71,16 +71,20 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticated()
                 .and()
                 .formLogin()
+                .usernameParameter("username")
+                .passwordParameter("password")
                 .loginPage("/login").permitAll().defaultSuccessUrl("/courses", true)
                 .and()
                 .rememberMe().tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21))
+                .rememberMeParameter("remember-me")
+                .rememberMeCookieName("remember-user-credentials")
                 .key("secure-key")
                 .and()
                 .logout()
                 .logoutUrl("/logout")
                 .clearAuthentication(true)
                 .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID","remember-me")
+                .deleteCookies("JSESSIONID","remember-user-credentials")
                 .logoutSuccessUrl("/login");
 
     }
