@@ -14,13 +14,16 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.http.HttpHeaders;
 import java.time.LocalDate;
 import java.util.Date;
 
 public class JwtUserAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private AuthenticationManager authenticationManager;
+
+    public JwtUserAuthenticationFilter(AuthenticationManager authenticationManager) {
+        this.authenticationManager=authenticationManager;
+    }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
@@ -47,7 +50,7 @@ public class JwtUserAuthenticationFilter extends UsernamePasswordAuthenticationF
                 .setSubject(authResult.getName()).claim("authorities", authResult.getAuthorities())
                 .setIssuedAt(new Date())
                 .setExpiration(java.sql.Date.valueOf(LocalDate.now().plusWeeks(2)))
-                .signWith(Keys.hmacShaKeyFor("secure".getBytes())).compact();
+                .signWith(Keys.hmacShaKeyFor("securesecuresecuresecuresecuresecuresecuresecuresecuresecuresecuresecuresecuresecuresecuresecure".getBytes())).compact();
 
         response.setHeader("Authorizartion", "Bearer " + jws);
     }
