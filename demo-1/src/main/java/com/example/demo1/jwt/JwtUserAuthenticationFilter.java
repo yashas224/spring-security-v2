@@ -2,12 +2,13 @@ package com.example.demo1.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -21,8 +22,11 @@ public class JwtUserAuthenticationFilter extends UsernamePasswordAuthenticationF
 
     private AuthenticationManager authenticationManager;
 
-    public JwtUserAuthenticationFilter(AuthenticationManager authenticationManager) {
-        this.authenticationManager=authenticationManager;
+    JwtConfig jwtConfig;
+
+    public JwtUserAuthenticationFilter(AuthenticationManager authenticationManager, JwtConfig jwtConfig) {
+        this.authenticationManager = authenticationManager;
+        this.jwtConfig = jwtConfig;
     }
 
     @Override
@@ -49,9 +53,9 @@ public class JwtUserAuthenticationFilter extends UsernamePasswordAuthenticationF
         String jws = Jwts.builder()
                 .setSubject(authResult.getName()).claim("authorities", authResult.getAuthorities())
                 .setIssuedAt(new Date())
-                .setExpiration(java.sql.Date.valueOf(LocalDate.now().plusWeeks(2)))
-                .signWith(Keys.hmacShaKeyFor("securesecuresecuresecuresecuresecuresecuresecuresecuresecuresecuresecuresecuresecuresecuresecure".getBytes())).compact();
+                .setExpiration(java.sql.Date.valueOf(LocalDate.now().plusDays(jwtConfig.getTokenExpirationDays())))
+                .signWith(jwtConfig.getSecretKeyForSigining()).compact();
 
-        response.setHeader("Authorizartion", "Bearer " + jws);
+        response.setHeader(jwtConfig.getAuthariationHeadder(), jwtConfig.getTokenPrefix() + " " + jws);
     }
 }

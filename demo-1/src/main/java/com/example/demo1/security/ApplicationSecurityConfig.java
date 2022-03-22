@@ -1,6 +1,8 @@
 package com.example.demo1.security;
 
 import com.example.demo1.auth.ApplicationUserService;
+import com.example.demo1.jwt.JwtConfig;
+import com.example.demo1.jwt.JwtTokenVerifier;
 import com.example.demo1.jwt.JwtUserAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final PasswordEncoder passwordEncoder;
+    @Autowired
+    JwtConfig jwtConfig;
 
     @Autowired
     private ApplicationUserService applicationUserService;
@@ -124,7 +128,8 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
         http.csrf().disable()
                 // making it statless
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                .addFilter(new JwtUserAuthenticationFilter(authenticationManager()))
+                .addFilter(new JwtUserAuthenticationFilter(authenticationManager(), jwtConfig))
+                .addFilterAfter(new JwtTokenVerifier(jwtConfig), JwtUserAuthenticationFilter.class)
                 .authorizeRequests()
                 .antMatchers("/", "index", "/css/*", "/js/*").permitAll()
                 .antMatchers("/api/**").hasRole(ApplicationUserRole.STUDENT.name());

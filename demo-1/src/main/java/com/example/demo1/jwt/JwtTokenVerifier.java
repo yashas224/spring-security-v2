@@ -1,18 +1,18 @@
 package com.example.demo1.jwt;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.thymeleaf.util.StringUtils;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -24,18 +24,25 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class JwtTokenVerifier extends OncePerRequestFilter {
+
+    JwtConfig jwtConfig;
+
+    public JwtTokenVerifier(JwtConfig jwtConfig) {
+        this.jwtConfig = jwtConfig;
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String autharizationHeader = request.getHeader("Authorizartion");
-        if (!Strings.isNullOrEmpty(autharizationHeader) && autharizationHeader.startsWith("Bearer ")) {
-            String token = autharizationHeader.substring("Bearer ".length());
+        String autharizationHeader = request.getHeader(jwtConfig.getAuthariationHeadder());
+        if (!Strings.isNullOrEmpty(autharizationHeader) && autharizationHeader.startsWith(jwtConfig.getTokenPrefix() + " ")) {
+            String token = autharizationHeader.substring((jwtConfig.getTokenPrefix() + " ").length());
 
             Jws<Claims> jws;
-            String key = "securesecuresecuresecuresecuresecuresecuresecuresecuresecuresecuresecuresecuresecuresecuresecure";
+            String key = jwtConfig.getSecretKey();
             try {
                 jws = Jwts.parserBuilder()
                         .setSigningKey(key.getBytes())
@@ -60,6 +67,7 @@ public class JwtTokenVerifier extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 // we can safely trust the JWT
             } catch (JwtException ex) {
+                response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 throw new IllegalStateException("Token cannot be verified !!!  :" + token);
             }
         } else {
